@@ -15,5 +15,10 @@ export default defineConfig({
       },
     },
   },
-  server: { port: 5173, host: true },
+  server: {
+    port: 5173,
+    host: true,
+    // `npm run dev`: forward /api to the live server (it has no CORS, so the browser must stay same-origin).
+    proxy: { '/api': { target: process.env.API_PROXY_TARGET ?? 'https://kebun.43-157-235-41.sslip.io', changeOrigin: true } },
+  },
 });

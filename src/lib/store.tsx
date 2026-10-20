@@ -51,10 +51,10 @@ const Ctx = createContext<StoreValue | null>(null);
 /** Turn database errors into friendly messages. */
 export function errorText(e: unknown): string {
   const msg = (e as any)?.message ?? String(e);
-  if (/trees_site_id_name_key/.test(msg)) return t('tree.nameTaken');
-  if (/trees_site_id_row_no_col_no_key/.test(msg)) return t('tree.spotTaken');
-  if (/Invalid login credentials/i.test(msg)) return t('auth.failed');
-  if (/row-level security|permission denied/i.test(msg)) return 'Tidak punya izin untuk ini.';
+  if (/trees_site_id_name_key|Key \(site_id, name\)/.test(msg)) return t('tree.nameTaken');
+  if (/trees_site_id_row_no_col_no_key|Key \(site_id, row_no, col_no\)/.test(msg)) return t('tree.spotTaken');
+  if (/Invalid login credentials|wrong username or password/i.test(msg)) return t('auth.failed');
+  if (/row-level security|permission denied|^forbidden$/i.test(msg)) return 'Tidak punya izin untuk ini.';
   if (/Failed to fetch|NetworkError/i.test(msg)) return 'Tidak ada koneksi internet.';
   return msg;
 }

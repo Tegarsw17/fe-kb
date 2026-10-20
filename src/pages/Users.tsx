@@ -65,7 +65,7 @@ export default function Users() {
           fields={[
             { name: 'full_name', label: t('user.fullName'), required: true },
             { name: 'username', label: t('user.username'), required: true, half: true, placeholder: 'budi', help: 'huruf kecil/angka, tanpa spasi' },
-            { name: 'password', label: t('user.password'), type: 'password', required: true, half: true, help: 'min. 6 karakter' },
+            { name: 'password', label: t('user.password'), type: 'password', required: true, half: true, help: 'min. 8 karakter' },
             { name: 'role', label: t('user.role'), type: 'select', required: true, options: [{ value: 'worker', label: t('role.worker') }, { value: 'owner', label: t('role.owner') }] },
           ]}
           extra={() => <p className="help">{t('user.help')}</p>}
@@ -76,7 +76,7 @@ export default function Users() {
         <FormModal
           title={`${t('user.setPassword')}: ${form.pw.full_name}`}
           onClose={() => setForm(null)}
-          fields={[{ name: 'password', label: t('user.password'), type: 'password', required: true, help: 'min. 6 karakter' }]}
+          fields={[{ name: 'password', label: t('user.password'), type: 'password', required: true, help: 'min. 8 karakter' }]}
           onSubmit={(v) => call({ action: 'set_password', user_id: form.pw.id, password: v.password })}
         />
       )}

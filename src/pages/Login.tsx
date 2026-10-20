@@ -3,7 +3,7 @@
 import { useState, type FormEvent } from 'react';
 import { t } from '@kebun/shared';
 import { useStore, errorText } from '../lib/store';
-import { safeStorage, supabaseConfigured } from '../lib/backend';
+import { safeStorage, backendConfigured } from '../lib/backend';
 import { Button } from '../components/ui';
 
 export default function Login() {
@@ -45,11 +45,11 @@ export default function Login() {
         {error && <p className="form-error">{error}</p>}
         {s.repo.kind === 'demo' && <p className="muted small">{t('mobile.demoLogin')}</p>}
         <Button variant="primary" busy={busy} type="submit">{t('auth.login')}</Button>
-        {supabaseConfigured && s.repo.kind === 'supabase' && (
+        {backendConfigured && s.repo.kind !== 'demo' && (
           <button type="button" className="linklike small" onClick={() => { safeStorage.set('kd-mode', 'demo'); location.reload(); }}>{t('auth.tryDemo')}</button>
         )}
-        {s.repo.kind === 'demo' && supabaseConfigured && (
-          <button type="button" className="linklike small" onClick={() => { safeStorage.remove('kd-mode'); location.reload(); }}>← Supabase</button>
+        {s.repo.kind === 'demo' && backendConfigured && (
+          <button type="button" className="linklike small" onClick={() => { safeStorage.remove('kd-mode'); location.reload(); }}>← Server</button>
         )}
         <div className="lang-toggle center">
           <button type="button" className={s.lang === 'id' ? 'on' : ''} onClick={() => s.setLang('id')}>ID</button>
