@@ -9,7 +9,8 @@
     "noEmit": true,
     "skipLibCheck": true,
     "isolatedModules": true,
-    "types": ["vite/client"]
+    "types": ["vite/client"],
+    "paths": { "@kebun/shared": ["./shared/src"] }
   },
-  "include": ["src"]
+  "include": ["src", "shared/src"]
 }
