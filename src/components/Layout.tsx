@@ -9,6 +9,7 @@ import { t, SKY_ICON } from '@kebun/shared';
 import { Link, useRoute } from '../lib/router';
 import { useStore, rows, type Theme } from '../lib/store';
 import { SiteSelect } from './ui';
+import { useSensor, isStale } from '../lib/sensor';
 
 interface NavItem { to: string; key: string; icon: ReactNode; owner?: boolean }
 
@@ -55,6 +56,9 @@ export function Layout({ children }: { children: ReactNode }) {
   const sites = rows(s, 'sites');
   const site = sites.find((x) => x.id === s.siteId) ?? sites[0];
   const w = s.weather(site);
+  // the garden sensor wins over the forecast while its reading is fresh
+  const sensor = useSensor();
+  const live = sensor && sensor !== 'error' && !isStale(sensor.latest) ? sensor.latest : null;
   const title = items.find((n) => isActive(path, n.to))?.key;
 
   return (
@@ -87,7 +91,11 @@ export function Layout({ children }: { children: ReactNode }) {
         <header className="topbar">
           <div className="topbar-title">{title ? t(title) : t('app.name')}</div>
           <div className="topbar-right">
-            {w && w !== 'error' && (
+            {live ? (
+              <Link to="/weather" className="weather-chip" title={`${t('sensor.title')} · ${t('weather.humidity')} ${Math.round(live.humidity)}%`}>
+                <span aria-hidden>🌡️</span> {Math.round(live.temp)}°C
+              </Link>
+            ) : w && w !== 'error' && (
               <Link to="/weather" className="weather-chip" title={t('sky.' + w.now.sky)}>
                 <span aria-hidden>{SKY_ICON[w.now.sky]}</span> {Math.round(w.now.temp)}°C
               </Link>

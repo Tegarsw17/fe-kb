@@ -2,7 +2,7 @@
 // Colors come from CSS variables --series-income / --series-expense / --series-1,
 // validated for color-blind separation in light and dark mode.
 
-import { useState } from 'react';
+import { useState, type PointerEvent } from 'react';
 import { monthName, num, rupiah, rupiahShort, t, type Lang, type MonthTotals } from '@kebun/shared';
 
 /** Grouped bars: income vs expense per month, with hover tooltip. */
@@ -84,4 +84,76 @@ function niceMax(v: number) {
   const p = Math.pow(10, Math.floor(Math.log10(v)));
   for (const m of [1, 1.5, 2, 2.5, 3, 4, 5, 6, 8, 10]) if (m * p >= v) return m * p;
   return 10 * p;
+}
+
+/**
+ * One series over time (2px line) with a crosshair + tooltip. Gaps over 2 hours break the line.
+ * `ceiling` caps the axis (e.g. 100 for %); the tooltip still shows the raw value.
+ */
+export function TimeLine({ data, label, unit, digits = 1, lang, fmtTime, ceiling }: {
+  data: { at: Date; value: number }[]; label: string; unit: string; digits?: number; lang: Lang; fmtTime: (d: Date) => string; ceiling?: number;
+}) {
+  const [hover, setHover] = useState<number | null>(null);
+  if (data.length < 2) return null;
+  const W = 480, H = 180, padL = 34, padR = 6, padB = 24, padT = 10;
+  const plotW = W - padL - padR, plotH = H - padB - padT;
+  const t0 = data[0].at.getTime(), t1 = data[data.length - 1].at.getTime();
+  const clip = (v: number) => (ceiling != null ? Math.min(v, ceiling) : v);
+  const vals = data.map((d) => clip(d.value));
+  const [lo, hi, step] = niceRange(Math.min(...vals), Math.max(...vals));
+  const x = (d: Date) => padL + ((d.getTime() - t0) / Math.max(1, t1 - t0)) * plotW;
+  const y = (v: number) => padT + plotH - ((clip(v) - lo) / (hi - lo)) * plotH;
+  const ticks: number[] = [];
+  for (let v = lo; v <= hi + step / 2; v += step) ticks.push(v);
+  const xTicks = [0, 0.25, 0.5, 0.75, 1].map((f) => new Date(t0 + f * (t1 - t0)));
+  const line = data.map((d, i) => `${i === 0 || d.at.getTime() - data[i - 1].at.getTime() > 2 * 3600_000 ? 'M' : 'L'}${x(d.at).toFixed(1)},${y(d.value).toFixed(1)}`).join(' ');
+
+  function onMove(e: PointerEvent<SVGSVGElement>) {
+    const r = e.currentTarget.getBoundingClientRect();
+    const px = ((e.clientX - r.left) / r.width) * W;
+    let best = 0;
+    for (let i = 1; i < data.length; i++) if (Math.abs(x(data[i].at) - px) < Math.abs(x(data[best].at) - px)) best = i;
+    setHover(best);
+  }
+  const h = hover !== null ? data[hover] : null;
+
+  return (
+    <div className="chart">
+      <div className="chart-box">
+        <svg viewBox={`0 0 ${W} ${H}`} role="img" aria-label={label} onPointerMove={onMove} onPointerDown={onMove} onPointerLeave={() => setHover(null)}>
+          {ticks.map((v) => (
+            <g key={v}>
+              <line x1={padL} x2={W - padR} y1={y(v)} y2={y(v)} className="grid" />
+              <text x={padL - 8} y={y(v) + 4} className="axis" textAnchor="end">{num(v, lang, 1)}</text>
+            </g>
+          ))}
+          {xTicks.map((d, i) => (
+            <text key={i} x={x(d)} y={H - 8} className="axis" textAnchor={i === 0 ? 'start' : i === 4 ? 'end' : 'middle'}>{fmtTime(d)}</text>
+          ))}
+          <path d={line} className="series-line" />
+          {h && (
+            <g>
+              <line x1={x(h.at)} x2={x(h.at)} y1={padT} y2={padT + plotH} className="crosshair" />
+              <circle cx={x(h.at)} cy={y(h.value)} r={5} className="series-dot" />
+            </g>
+          )}
+        </svg>
+        {h && (
+          <div className="tooltip" style={{ left: `${Math.min(85, Math.max(15, (x(h.at) / W) * 100))}%` }}>
+            <b>{fmtTime(h.at)}</b>
+            <div>{label}: {num(h.value, lang, digits)}{unit}</div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/** Axis bounds with ~4 round steps, always at least 1 unit tall. */
+function niceRange(min: number, max: number): [number, number, number] {
+  const span = Math.max(1, max - min);
+  const raw = span / 4;
+  const p = Math.pow(10, Math.floor(Math.log10(raw)));
+  const step = [1, 2, 2.5, 5, 10].map((m) => m * p).find((s) => s >= raw) ?? 10 * p;
+  return [Math.floor(min / step) * step, Math.ceil(max / step) * step, step];
 }

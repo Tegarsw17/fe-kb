@@ -143,7 +143,7 @@ export function GardenView({ site, selectedId, onSelect, compact = false }: {
       </div>
 
       <Legend />
-      {!compact && <p className="garden-hint muted">{t('garden.hint')}</p>}
+      {!compact && <p className="garden-hint muted">{t(mode === '2d' ? 'garden.hint2d' : 'garden.hint')}</p>}
     </div>
   );
 }

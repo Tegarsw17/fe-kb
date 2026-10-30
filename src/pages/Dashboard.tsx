@@ -12,6 +12,7 @@ import { Badge, Button, Card, Empty, Modal, Stat, Meter, Tabs } from '../compone
 import { ActivityForm, CompleteTaskForm, FORM_TABLES } from '../components/forms';
 import { GardenView } from '../garden/GardenView';
 import { TreePanel } from '../garden/TreePanel';
+import { useSensor, isStale, sensorTime } from '../lib/sensor';
 
 const KIND_ICON = { watering: <LuDroplets />, fertilizing: <LuSprout />, spraying: <LuSprayCan />, other: <LuCheck /> };
 
@@ -57,6 +58,8 @@ export default function Dashboard() {
   const h = new Date().getHours();
   const part = h < 11 ? 'dash.morning' : h < 15 ? 'dash.noon' : h < 18 ? 'dash.afternoon' : 'dash.evening';
   const selectedTree = rows(s, 'trees').find((x) => x.id === treeId);
+  const sensor = useSensor();
+  const reading = sensor && sensor !== 'error' ? sensor.latest : null;
 
   return (
     <div className="dash">
@@ -110,6 +113,12 @@ export default function Dashboard() {
       </div>
 
       <div className="stat-row">
+        {reading && (
+          <Link to="/weather" className="stat-link">
+            <Stat label={t('sensor.title')} value={`${num(reading.temp, s.lang, 1)}°C`}
+              sub={`${t('weather.humidity')} ${num(reading.humidity, s.lang, 1)}% · ${isStale(reading) ? t('sensor.offline') + ' · ' : ''}${sensorTime(reading.at, s.lang)}`} />
+          </Link>
+        )}
         <Stat label={t('dash.trees')} value={trees.length} sub={`${t('tree.youngGroup').split(' ')[0]} ${young} · ${t('tree.matureGroup').split(' ')[0]} ${trees.length - young}`} />
         <Stat label={t('dash.flowering')} value={phases.flowering} tone="bloom" />
         <Stat label={t('dash.fruiting')} value={phases.fruiting} tone="good" />
