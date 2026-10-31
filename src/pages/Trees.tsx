@@ -130,7 +130,9 @@ export default function Trees() {
     (!q || x.name.toLowerCase().includes(q.toLowerCase())) &&
     (!variety || x.variety_code === variety) &&
     (!phase || effectivePhase(x, vmap.get(x.variety_code ?? '')) === phase) &&
-    (!health || x.health === health));
+    (!health || x.health === health))
+    // numeric: DH-2 before DH-10 (the database sorts names as plain text)
+    .sort((a, b) => a.name.localeCompare(b.name, 'id', { numeric: true }));
 
   const exportCsv = () => downloadCSV('pohon.csv', list.map((x) => ({
     name: x.name, variety: x.variety_code, site: sites.find((y) => y.id === x.site_id)?.name, row: x.row_no, col: x.col_no,
