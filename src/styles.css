@@ -281,7 +281,10 @@ hr { border: 0; border-top: 1px solid var(--line); margin: 14px 0; }
 .table tr:last-child td { border-bottom: 0; }
 .table tbody tr.clickable:hover { background: var(--surface-2); }
 .table .num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
-.more-row { padding: 12px; text-align: center; }
+.pager { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 10px; padding: 10px 14px; border-top: 1px solid var(--line); }
+.pager > .muted { margin-right: auto; }
+.pager-nav { display: inline-flex; align-items: center; gap: 4px; }
+.icon-btn.disabled { opacity: .35; cursor: default; pointer-events: none; }
 .swatch { display: inline-block; width: 14px; height: 14px; border-radius: 50%; vertical-align: -2px; border: 1px solid rgba(0, 0, 0, .1); }
 
 /* ------------------------------------------------------------------ modal & form */

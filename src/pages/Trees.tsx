@@ -8,7 +8,7 @@ import {
 import { useStore, useTables, rows, bySite } from '../lib/store';
 import { Link, navigate } from '../lib/router';
 import { downloadCSV } from '../lib/csv';
-import { Button, Card, Empty, PageHeader, RowActions } from '../components/ui';
+import { Button, Card, Empty, PageHeader, Pagination, RowActions } from '../components/ui';
 import { FormModal, type Field } from '../components/FormModal';
 import { FORM_TABLES, useOptions } from '../components/forms';
 import { HealthBadge, PhaseBadge } from '../components/badges';
@@ -121,7 +121,7 @@ export default function Trees() {
   const [variety, setVariety] = useState('');
   const [phase, setPhase] = useState('');
   const [health, setHealth] = useState('');
-  const [limit, setLimit] = useState(150);
+  const [size, setSize] = useState(50);
 
   const sites = rows(s, 'sites');
   const varieties = rows(s, 'varieties');
@@ -133,6 +133,12 @@ export default function Trees() {
     (!health || x.health === health))
     // numeric: DH-2 before DH-10 (the database sorts names as plain text)
     .sort((a, b) => a.name.localeCompare(b.name, 'id', { numeric: true }));
+
+  // Back to page 1 whenever the filters, site or page size change.
+  const pageKey = [q, variety, phase, health, s.siteId, size].join('|');
+  const [pg, setPg] = useState({ key: pageKey, n: 1 });
+  const pages = Math.max(1, Math.ceil(list.length / size));
+  const page = pg.key === pageKey ? Math.min(pg.n, pages) : 1;
 
   const exportCsv = () => downloadCSV('pohon.csv', list.map((x) => ({
     name: x.name, variety: x.variety_code, site: sites.find((y) => y.id === x.site_id)?.name, row: x.row_no, col: x.col_no,
@@ -177,7 +183,7 @@ export default function Trees() {
                 </tr>
               </thead>
               <tbody>
-                {list.slice(0, limit).map((x) => (
+                {list.slice((page - 1) * size, page * size).map((x) => (
                   <tr key={x.id} className="clickable" onClick={() => navigate(`/trees/${x.id}`)}>
                     <td><b>{x.name}</b></td>
                     <td>{x.variety_code ?? '–'}</td>
@@ -193,7 +199,7 @@ export default function Trees() {
                 ))}
               </tbody>
             </table>
-            {list.length > limit && <div className="more-row"><Button onClick={() => setLimit(limit + 150)}>+ {Math.min(150, list.length - limit)}</Button></div>}
+            <Pagination page={page} size={size} total={list.length} onPage={(n) => setPg({ key: pageKey, n })} onSize={setSize} />
           </div>
         )}
       </Card>

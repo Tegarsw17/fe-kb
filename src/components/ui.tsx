@@ -1,7 +1,7 @@
 // Small reusable UI pieces: buttons, cards, modal, badges, photos, toasts.
 
 import { useEffect, useRef, useState, type ReactNode, type ButtonHTMLAttributes } from 'react';
-import { LuX, LuCamera, LuTrash2, LuPencil } from 'react-icons/lu';
+import { LuX, LuCamera, LuTrash2, LuPencil, LuChevronLeft, LuChevronRight } from 'react-icons/lu';
 import { t, type Site } from '@kebun/shared';
 import { useStore, errorText } from '../lib/store';
 import { compressImage } from '../lib/image';
@@ -85,6 +85,33 @@ export function PageHeader({ title, subtitle, actions }: { title: ReactNode; sub
         {subtitle && <p className="muted">{subtitle}</p>}
       </div>
       {actions && <div className="page-actions">{actions}</div>}
+    </div>
+  );
+}
+
+// ------------------------------------------------------------------ pagination
+export const PAGE_SIZES = [25, 50, 100];
+
+/** Page controls under a table: "51–100 dari 312", rows per page, prev/next. */
+export function Pagination({ page, size, total, onPage, onSize }: {
+  page: number; size: number; total: number;
+  onPage: (page: number) => void; onSize: (size: number) => void;
+}) {
+  const pages = Math.max(1, Math.ceil(total / size));
+  if (total <= PAGE_SIZES[0]) return null;
+  return (
+    <div className="pager">
+      <span className="muted small">{t('page.range', { from: (page - 1) * size + 1, to: Math.min(page * size, total), n: total })}</span>
+      <select className="select select-sm" value={size} onChange={(e) => onSize(Number(e.target.value))} aria-label={t('page.size')}>
+        {PAGE_SIZES.map((n) => <option key={n} value={n}>{t('page.perPage', { n })}</option>)}
+      </select>
+      <span className="pager-nav">
+        <IconButton label={t('page.prev')} onClick={page > 1 ? () => onPage(page - 1) : undefined} className={page > 1 ? '' : 'disabled'}><LuChevronLeft /></IconButton>
+        <select className="select select-sm" value={page} onChange={(e) => onPage(Number(e.target.value))} aria-label={t('page.page')}>
+          {Array.from({ length: pages }, (_, i) => <option key={i + 1} value={i + 1}>{t('page.of', { p: i + 1, n: pages })}</option>)}
+        </select>
+        <IconButton label={t('page.next')} onClick={page < pages ? () => onPage(page + 1) : undefined} className={page < pages ? '' : 'disabled'}><LuChevronRight /></IconButton>
+      </span>
     </div>
   );
 }
